@@ -87,14 +87,14 @@ public final class Main extends JavaPlugin {
         File menus = new File(getDataFolder(), "menu");
         if (!menus.exists()) {
             menus.mkdirs();
-            saveResource("menu/home.yml", true);
-            saveResource("menu/confirmBuyItem.yml", true);
-            saveResource("menu/confirmBuyCountItem.yml", true);
-            saveResource("menu/selectCount.yml", true);
-            saveResource("menu/itemForSale.yml", true);
-            saveResource("menu/unsoldItems.yml", true);
-            saveResource("menu/playerItemsView.yml", true);
-            saveResource("menu/viewShulkerMenu.yml", true);
+            saveResourceWithFallback("menu/home.yml", true);
+            saveResourceWithFallback("menu/confirmBuyItem.yml", true);
+            saveResourceWithFallback("menu/confirmBuyCountItem.yml", true);
+            saveResourceWithFallback("menu/selectCount.yml", true);
+            saveResourceWithFallback("menu/itemForSale.yml", true);
+            saveResourceWithFallback("menu/unsoldItems.yml", true);
+            saveResourceWithFallback("menu/playerItemsView.yml", true);
+            saveResourceWithFallback("menu/viewShulkerMenu.yml", true);
         }
         message = new Message(getLogger());
         pluginLogger = new PluginLogger(new File(getDataFolder(), "pluginLogs"), getLogger());
@@ -399,9 +399,51 @@ public final class Main extends JavaPlugin {
         }
         var f = new File(getDataFolder(), path);
         if (!f.exists()) {
-            saveResource(path, false);
+            saveResourceWithFallback(path, false);
         }
         return f;
+    }
+
+    private void saveResourceWithFallback(String path, boolean replace) {
+        try {
+            saveResource(path, replace);
+        } catch (IllegalArgumentException e) {
+            boolean saved = false;
+            if (getResource("en/" + path) != null) {
+                saveResourceFrom("en/" + path, path, replace);
+                saved = true;
+            } else if (getResource("ru/" + path) != null) {
+                saveResourceFrom("ru/" + path, path, replace);
+                saved = true;
+            }
+            if (!saved) throw e;
+        }
+    }
+
+    public static void saveResourceTo(String resourcePath, String toPath, boolean replace) {
+        instance.saveResourceFrom(resourcePath, toPath, replace);
+    }
+
+    private void saveResourceFrom(String resourcePath, String toPath, boolean replace) {
+        resourcePath = resourcePath.replace('\\', '/');
+        toPath = toPath.replace('\\', '/');
+        if (resourcePath.startsWith("/")) resourcePath = resourcePath.substring(1);
+        if (toPath.startsWith("/")) toPath = toPath.substring(1);
+        var outFile = new File(getDataFolder(), toPath);
+        var parent = outFile.getParentFile();
+        if (parent != null) parent.mkdirs();
+        if (outFile.exists() && !replace) return;
+        var in = getResource(resourcePath);
+        if (in == null) throw new IllegalArgumentException("Resource not found: " + resourcePath);
+        try (var input = in; var output = new java.io.FileOutputStream(outFile)) {
+            byte[] buffer = new byte[8192];
+            int len;
+            while ((len = input.read(buffer)) > 0) {
+                output.write(buffer, 0, len);
+            }
+        } catch (java.io.IOException ioException) {
+            throw new RuntimeException(ioException);
+        }
     }
 
     public static String getServerId() {

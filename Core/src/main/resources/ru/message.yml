@@ -38,6 +38,7 @@ messages:
   online-seller: '&aонлайн'
   offline-seller: '&cоффлайн'
   search-type: '-полное_совпадение'
+  item-price-limit: '&#fb093c» &fМаксимальная цена на этот товар $%sell%'
 time-format:
   ago: 'назад'
   in: 'через'

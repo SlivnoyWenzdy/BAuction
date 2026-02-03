@@ -38,6 +38,12 @@ default-offer-time: '2d'
 offer-min-price: 10
 offer-max-price: 100000000
 
+# Maximum prices by item tags (material/tag names, case-insensitive)
+price-limits:
+  diamond_sword: 50000
+  netherite_sword: 100000
+  mending: 150000
+
 economy: 'Vault' # Vault | PlayerPoints | BVault (https://github.com/By1337/BVault)
 BVault-setting:
   current-bank: vault

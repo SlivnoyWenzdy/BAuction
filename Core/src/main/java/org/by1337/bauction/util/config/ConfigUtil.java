@@ -19,7 +19,22 @@ public class ConfigUtil {
         }
         var f = new File(Main.getInstance().getDataFolder(), path);
         if (!f.exists()) {
-            Main.getInstance().saveResource(path, false);
+            try {
+                Main.getInstance().saveResource(path, false);
+            } catch (IllegalArgumentException e) {
+                boolean saved = false;
+                try {
+                    Main.getInstance().saveResource("en/" + path, false);
+                    saved = true;
+                } catch (IllegalArgumentException ignored) { }
+                if (!saved) {
+                    try {
+                        Main.getInstance().saveResource("ru/" + path, false);
+                        saved = true;
+                    } catch (IllegalArgumentException ignored) { }
+                }
+                if (!saved) throw e;
+            }
         }
         return f;
     }

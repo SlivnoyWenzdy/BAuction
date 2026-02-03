@@ -28,6 +28,7 @@ public class Config {
     private String homeMenu;
     private String playerItemsViewMenu;
     private String lang;
+    private Map<String, Integer> priceLimits;
 
     public Config( ) {
         reload();
@@ -37,8 +38,20 @@ public class Config {
         loadConfigs();
         sortingMap = new LinkedHashMap<>();
         categoryMap = new LinkedHashMap<>();
-        sorting.getMap("sorting", Sorting.class).values().stream().sorted(Sorting::compareTo).forEach(sorting1 -> sortingMap.put(sorting1.nameKey(), sorting1));
-        sorting.getMap("categories", Category.class).values().stream().sorted(Category::compareTo).forEach(category -> categoryMap.put(category.nameKey(), category));
+        try {
+            var sortMap = sorting.getMap("sorting", Sorting.class);
+            if (sortMap != null) {
+                sortMap.values().stream().sorted(Sorting::compareTo).forEach(sorting1 -> sortingMap.put(sorting1.nameKey(), sorting1));
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            var catMap = sorting.getMap("categories", Category.class);
+            if (catMap != null) {
+                catMap.values().stream().sorted(Category::compareTo).forEach(category -> categoryMap.put(category.nameKey(), category));
+            }
+        } catch (Throwable ignored) {
+        }
 
 
         maxSlots = config.getAsInteger("default-slots");
@@ -55,6 +68,12 @@ public class Config {
         homeMenu = config.getAsString("home-menu");
         playerItemsViewMenu = config.getAsString("player-items-view-menu");
         lang = config.getAsString("lang", "en_us");
+        Map<String, Integer> tmpLimits = null;
+        try {
+            tmpLimits = config.getMap("price-limits", Integer.class);
+        } catch (Throwable ignored) {
+        }
+        priceLimits = tmpLimits != null ? new LinkedHashMap<>(tmpLimits) : new LinkedHashMap<>();
 
     }
 
@@ -128,5 +147,9 @@ public class Config {
 
     public String getLang() {
         return lang;
+    }
+
+    public Map<String, Integer> getPriceLimits() {
+        return priceLimits;
     }
 }

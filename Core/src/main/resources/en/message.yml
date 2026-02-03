@@ -36,6 +36,7 @@ messages:
   online-seller: '&aonline'
   offline-seller: '&coffline'
   search-type: '-complete_matches'
+  item-price-limit: '&#fb093c» &fМаксимальная цена на этот товар $%sell%'
 time-format:
   ago: 'ago'
   in: 'in'

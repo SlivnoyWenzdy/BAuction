@@ -166,6 +166,23 @@ public class FileDataBase extends DataBaseCore implements Listener {
                 }
             }
 
+            Map<String, Integer> limits = Main.getCfg().getPriceLimits();
+            if (limits != null && !limits.isEmpty()) {
+                int maxAllowed = -1;
+                for (String tag : sellItem.getTags()) {
+                    Integer v = limits.get(tag.toLowerCase(Locale.ENGLISH));
+                    if (v != null) {
+                        if (maxAllowed == -1) maxAllowed = v;
+                        else maxAllowed = Math.min(maxAllowed, v);
+                    }
+                }
+                if (maxAllowed != -1 && sellItem.getPrice() > maxAllowed) {
+                    event.setValid(false);
+                    event.setReason(Lang.getMessage("item-price-limit").replace("%sell%", NumberUtil.formatNumberWithThousandsSeparator(maxAllowed)));
+                    return;
+                }
+            }
+
             if (Main.getCfg().getMaxSlots() <= (sellItemsCountByUser(user.uuid) - user.getExternalSlots())) {
                 event.setValid(false);
                 event.setReason(Lang.getMessage("auction_item_limit_reached"));

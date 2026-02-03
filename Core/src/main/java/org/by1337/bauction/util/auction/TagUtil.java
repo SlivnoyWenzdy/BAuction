@@ -2,19 +2,20 @@ package org.by1337.bauction.util.auction;
 
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
-import org.by1337.blib.BLib;
 import org.by1337.blib.configuration.YamlContext;
 import org.by1337.bauction.db.kernel.SellItem;
-import org.by1337.blib.nbt.impl.CompoundTag;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.*;
 
 public class TagUtil {
@@ -27,7 +28,17 @@ public class TagUtil {
         File file;
         file = new File(plugin.getDataFolder().getPath() + "/tagUtil.yml");
         if (!file.exists()) {
-            plugin.saveResource("tagUtil.yml", true);
+            try {
+                plugin.saveResource("tagUtil.yml", true);
+            } catch (IllegalArgumentException e) {
+                if (plugin.getResource("en/tagUtil.yml") != null) {
+                    org.by1337.bauction.Main.saveResourceTo("en/tagUtil.yml", "tagUtil.yml", true);
+                } else if (plugin.getResource("ru/tagUtil.yml") != null) {
+                    org.by1337.bauction.Main.saveResourceTo("ru/tagUtil.yml", "tagUtil.yml", true);
+                } else {
+                    throw e;
+                }
+            }
         }
         context = new YamlContext(YamlConfiguration.loadConfiguration(file));
 
@@ -83,14 +94,68 @@ public class TagUtil {
     }
 
     public static List<String> parseTags(PersistentDataContainer pdc) {
-        CompoundTag compound = BLib.getApi().getParseCompoundTag().pdcToCompoundTag(pdc);
-
         List<String> list = new ArrayList<>();
+        if (pdc == null) return list;
 
-        for (String key : compound.getTags().keySet()) {
-            list.add(key + ":" + compound.get(key).getAsObject());
+        for (NamespacedKey key : pdc.getKeys()) {
+            String base = key.getNamespace() + ":" + key.getKey();
+
+            addIfHas(list, pdc, key, PersistentDataType.STRING, base);
+            addIfHas(list, pdc, key, PersistentDataType.INTEGER, base);
+            addIfHas(list, pdc, key, PersistentDataType.LONG, base);
+            addIfHas(list, pdc, key, PersistentDataType.SHORT, base);
+            addIfHas(list, pdc, key, PersistentDataType.BYTE, base);
+            addIfHas(list, pdc, key, PersistentDataType.FLOAT, base);
+            addIfHas(list, pdc, key, PersistentDataType.DOUBLE, base);
+
+            if (pdc.has(key, PersistentDataType.INTEGER_ARRAY)) {
+                int[] val = pdc.get(key, PersistentDataType.INTEGER_ARRAY);
+                if (val != null) list.add(base + ":" + Arrays.toString(val));
+            }
+            if (pdc.has(key, PersistentDataType.LONG_ARRAY)) {
+                long[] val = pdc.get(key, PersistentDataType.LONG_ARRAY);
+                if (val != null) list.add(base + ":" + Arrays.toString(val));
+            }
+            if (pdc.has(key, PersistentDataType.BYTE_ARRAY)) {
+                byte[] val = pdc.get(key, PersistentDataType.BYTE_ARRAY);
+                if (val != null) list.add(base + ":" + Arrays.toString(val));
+            }
+
+            if (pdc.has(key, PersistentDataType.TAG_CONTAINER)) {
+                PersistentDataContainer child = pdc.get(key, PersistentDataType.TAG_CONTAINER);
+                if (child != null) {
+                    for (String s : parseTags(child)) {
+                        list.add(base + "." + s);
+                    }
+                }
+            }
+            if (pdc.has(key, PersistentDataType.TAG_CONTAINER_ARRAY)) {
+                PersistentDataContainer[] arr = pdc.get(key, PersistentDataType.TAG_CONTAINER_ARRAY);
+                if (arr != null) {
+                    for (int i = 0; i < arr.length; i++) {
+                        PersistentDataContainer child = arr[i];
+                        if (child != null) {
+                            for (String s : parseTags(child)) {
+                                list.add(base + "[" + i + "]." + s);
+                            }
+                        }
+                    }
+                }
+            }
         }
+
         return list;
+    }
+
+    private static <Z, T> void addIfHas(List<String> out, PersistentDataContainer pdc, NamespacedKey key, PersistentDataType<Z, T> type, String base) {
+        if (pdc.has(key, type)) {
+            T val = pdc.get(key, type);
+            if (val != null) {
+                out.add(base + ":" + val);
+            } else {
+                out.add(base);
+            }
+        }
     }
 
     public static List<String> getTags(Material material) {
