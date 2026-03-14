@@ -31,7 +31,7 @@ public class NumberUtil {
         char[] integerDigits = integerPart.toCharArray();
         for (int i = integerDigits.length - 1, count = 0; i >= 0; i--, count++) {
             if (count > 0 && count % 3 == 0) {
-                formatted.append(" ");
+                formatted.append(",");
             }
             formatted.append(integerDigits[i]);
         }

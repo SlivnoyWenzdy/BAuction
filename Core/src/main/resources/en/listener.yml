@@ -17,12 +17,12 @@ listeners:
   buy_item_count_seller:
     event: BUY_ITEM_COUNT_SELLER
     commands:
-      - '[MESSAGE] &#0dfb00» &fPlayer {buyer_name} bought &6{item_name}&f from you for {price}!'
+      - '[MESSAGE] &#0dfb00» &fPlayer {buyer_name} bought &6{item_name}&f from you for {price_format}!'
 
   buy_item_to_seller:
     event: BUY_ITEM_TO_SELLER
     commands:
-      - '[MESSAGE] &#0dfb00» &fPlayer {buyer_name} bought &6{item_name}&f from you for {price}!'
+      - '[MESSAGE] &#0dfb00» &fPlayer {buyer_name} bought &6{item_name}&f from you for {price_format}!'
 
   buy_item_count:
     event: BUY_ITEM_COUNT
